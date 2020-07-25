@@ -1,0 +1,35 @@
+From e9a3bdcebf1d469b36b874d01c4116e7e23821cd Mon Sep 17 00:00:00 2001
+From: lvying6 <lvying6@huawei.com>
+Date: Sun, 26 Apr 2020 17:17:34 +0800
+Subject: [PATCH] tbb: fix __TBB_machine_fetchadd4 was not declared on ARM64
+
+../../src/tbb/tools_api/ittnotify_config.h:338:12: error: '__TBB_machine_fetchadd4' was not declared in this scope
+      return __TBB_machine_fetchadd4(ptr, 1) + 1L;
+             ^~~~~~~~~~~~~~~~~~~~~~~
+../../src/tbb/tools_api/ittnotify_config.h:338:12: note:
+suggested alternative: '__atomic_fetch_add_4'
+      return __TBB_machine_fetchadd4(ptr, 1) + 1L;
+             ^~~~~~~~~~~~~~~~~~~~~~~
+             __atomic_fetch_add_4
+
+Signed-off-by: lvying6 <lvying6@huawei.com>
+---
+ src/tbb/tools_api/ittnotify_config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tbb/tools_api/ittnotify_config.h b/src/tbb/tools_api/ittnotify_config.h
+index bdb4ec2..041ceb3 100644
+--- a/src/tbb/tools_api/ittnotify_config.h
++++ b/src/tbb/tools_api/ittnotify_config.h
+@@ -335,7 +335,7 @@ ITT_INLINE long
+ __itt_interlocked_increment(volatile long* ptr) ITT_INLINE_ATTRIBUTE;
+ ITT_INLINE long __itt_interlocked_increment(volatile long* ptr)
+ {
+-    return __TBB_machine_fetchadd4(ptr, 1) + 1L;
++    return __atomic_fetch_add(ptr, 1L, __ATOMIC_SEQ_CST) + 1L;
+ }
+ #endif /* ITT_SIMPLE_INIT */
+ 
+-- 
+1.8.3.1
+
