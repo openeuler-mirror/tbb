@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.2
-Release:        1
+Release:        2
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -143,6 +143,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Tue Aug 18 2020 smileknife<jackshan2010@aliyun.com> - 2020.2-2
+- update release for rebuilding
+
 * Sun Apr 26 2020 lvying<lvying6@huawei.com> - 2020.2-1
 * upgrade to version 2020.2
 
