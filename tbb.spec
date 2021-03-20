@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.3
-Release:        1
+Release:        2
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -54,8 +54,8 @@ sed -i '/^#!/d' python/tbb/{pool,test}.py
 
 %build
 %make_build tbb_build_prefix=obj stdver=c++14 \
-	CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD" \
-	LDFLAGS="$RPM_LD_FLAGS -lpthread"
+	CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
+	LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
 %define pcsource {%{SOURCE6} %{SOURCE7} %{SOURCE8}}
 for pcfile in %{pcsource}; do
     base=$(basename ${pcfile})
@@ -66,8 +66,8 @@ done
 . build/obj_release/tbbvars.sh
 pushd python
 %make_build -C rml stdver=c++14 \
-  CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD" \
-  LDFLAGS="$RPM_LD_FLAGS -lpthread"
+  CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
+  LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
 cp -p rml/libirml.so* .
 %py3_build
 popd
@@ -143,6 +143,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Sat Mar 20 2021 shenyangyang <shenyangyang4@huawei.com> - 2020.3-2
+- Add -fstack-protector-strong for so file
+
 * Fri Jul 24 2020 shixuantong <shixuantong@huawei.com> - 2020.3-1
 - update to 2020.3-1
 
