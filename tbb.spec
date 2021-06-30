@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.3
-Release:        2
+Release:        3
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -67,7 +67,11 @@ done
 pushd python
 %make_build -C rml stdver=c++14 \
   CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
+  %ifarch riscv64
+  LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong -latomic"
+  %else
   LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
+  %endif
 cp -p rml/libirml.so* .
 %py3_build
 popd
@@ -143,6 +147,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Wed  Apr 14 2021 yangyanchao <yangyanchao6@huawei.com> - 2020.3-3
+- Link to libatomic in riscv
+
 * Sat Mar 20 2021 shenyangyang <shenyangyang4@huawei.com> - 2020.3-2
 - Add -fstack-protector-strong for so file
 
