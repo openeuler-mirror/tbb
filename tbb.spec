@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.2
-Release:        2
+Release:        3
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -75,7 +75,7 @@ popd
 make doxygen
 
 %check
-make test tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
+make test %{?_smp_mflags} tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
 
 %install
 mkdir -p %{buildroot}/%{_libdir}
@@ -143,6 +143,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Fri Jul 2 2021 Hugel <genqihu1@huawei.com> - 2020.2-3
+- Add multiple threads to make test
+
 * Tue Aug 18 2020 smileknife<jackshan2010@aliyun.com> - 2020.2-2
 - update release for rebuilding
 
