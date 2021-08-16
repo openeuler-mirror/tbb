@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.3
-Release:        3
+Release:        5
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -54,8 +54,12 @@ sed -i '/^#!/d' python/tbb/{pool,test}.py
 
 %build
 %make_build tbb_build_prefix=obj stdver=c++14 \
-	CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
-	LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
+    CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
+  %ifarch riscv64
+    LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong -latomic"
+  %else
+    LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
+  %endif
 %define pcsource {%{SOURCE6} %{SOURCE7} %{SOURCE8}}
 for pcfile in %{pcsource}; do
     base=$(basename ${pcfile})
@@ -66,11 +70,11 @@ done
 . build/obj_release/tbbvars.sh
 pushd python
 %make_build -C rml stdver=c++14 \
-  CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
+    CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
   %ifarch riscv64
-  LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong -latomic"
+    LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong -latomic"
   %else
-  LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
+    LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
   %endif
 cp -p rml/libirml.so* .
 %py3_build
@@ -79,7 +83,7 @@ popd
 make doxygen
 
 %check
-make test tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
+make test %{?_smp_mflags} tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
 
 %install
 mkdir -p %{buildroot}/%{_libdir}
@@ -147,6 +151,12 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Thu Aug 12 2021 PandaGix <pandagix@gitee.com> -2020.3-5
+- Improve support for riscv64. Build(make_build) also link to libatomic for riscv64, not only in py3_build.
+
+* Fri Jul 2 2021 Hugel <genqihu1@huawei.com> - 2020.3-4
+- Add multiple threads to make test
+
 * Wed  Apr 14 2021 yangyanchao <yangyanchao6@huawei.com> - 2020.3-3
 - Link to libatomic in riscv
 
