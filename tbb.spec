@@ -1,6 +1,6 @@
 Name:           tbb
-Version:        2021.4.0
-Release:        1
+Version:        2020.3
+Release:        4
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -10,9 +10,8 @@ Source6:        tbb.pc
 Source7:        tbbmalloc.pc
 Source8:        tbbmalloc_proxy.pc
 Patch9000:      bugfix-tbb-fix-__TBB_machine_fetchadd4-was-not-declared-on-.patch
-Patch9001:      specify-the-python-interpreter.patch
 
-BuildRequires:  gcc-c++ doxygen swig python3-devel cmake make
+BuildRequires:  gcc-c++ doxygen swig python3-devel
 
 %description
 Threading Building Blocks (TBB) lets you easily write parallel C++ programs that 
@@ -47,14 +46,13 @@ TBB module of Python 3
 %prep
 %autosetup -n oneTBB-%{version} -p1
 
+sed -i 's/"`hostname -s`" ("`uname -m`"/openEulerbuild (%{_arch}/' \
+    build/version_info_linux.sh
+sed -i 's/-mrtm//' build/linux.gcc.inc
 sed -i 's,env python,python3,' python/TBB.py python/tbb/__*.py
 sed -i '/^#!/d' python/tbb/{pool,test}.py
 
 %build
-%cmake \
-    -DTBB_TEST:BOOL=OFF \
-    -DTBB4PY_BUILD:BOOL=ON
-
 %make_build tbb_build_prefix=obj stdver=c++14 \
 	CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
 	LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
@@ -65,7 +63,7 @@ for pcfile in %{pcsource}; do
     touch -r ${pcfile} ${base}
 done
 
-.  */vars.sh
+. build/obj_release/tbbvars.sh
 pushd python
 %make_build -C rml stdver=c++14 \
   CPLUS_FLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
@@ -74,19 +72,25 @@ pushd python
   %else
   LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
   %endif
+cp -p rml/libirml.so* .
 %py3_build
 popd
 
+make doxygen
 
 %check
 make test %{?_smp_mflags} tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
 
 %install
-mkdir -p build/python/build
-%make_install
-
 mkdir -p %{buildroot}/%{_libdir}
 mkdir -p %{buildroot}/%{_includedir}
+
+pushd build/obj_release
+    for file in libtbb{,malloc{,_proxy}}; do
+        install -p -D -m 755 ${file}.so.2 %{buildroot}/%{_libdir}
+        ln -s $file.so.2 %{buildroot}/%{_libdir}/$file.so
+    done
+popd
 
 pushd include
     find tbb -type f ! -name \*.htm\* -exec install -p -D -m 644 {} \
@@ -99,48 +103,50 @@ for file in %{pcsource}; do
         %{buildroot}/%{_libdir}/pkgconfig/$(basename ${file})
 done
 
-.  */vars.sh
+# Install the rml headers
+mkdir -p %{buildroot}%{_includedir}/rml
+cp -p src/rml/include/*.h %{buildroot}%{_includedir}/rml
+
+. build/obj_release/tbbvars.sh
 pushd python
 %py3_install
 chmod a+x %{buildroot}%{python3_sitearch}/TBB.py
 chmod a+x %{buildroot}%{python3_sitearch}/tbb/__*.py
+cp -p libirml.so.1 %{buildroot}%{_libdir}
+ln -s libirml.so.1 $RPM_BUILD_ROOT%{_libdir}/libirml.so
 popd
 
 mkdir -p %{buildroot}%{_libdir}/cmake
 cp -a cmake %{buildroot}%{_libdir}/cmake/tbb
+rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 
 %ldconfig_scriptlets libs
 
 %files
 %defattr(-,root,root)
-%license LICENSE.txt
-%doc %{_docdir}/TBB/README.md
-%{_prefix}/lib.*/*
-%{_prefix}/temp.*/*
+%license LICENSE
 %{_libdir}/libirml.so.1
-%{_libdir}/*.so.*
+%{_libdir}/*.so.2
 
 %files devel
 %defattr(-,root,root)
 %{_libdir}/pkgconfig/*.pc
 %{_includedir}/tbb
-%{_includedir}/oneapi/
+%{_includedir}/rml
 %{_libdir}/cmake/
 %{_libdir}/*.so
 
 %files help
 %defattr(-,root,root)
-%doc README.md
+%doc doc/Release_Notes.txt html README README.md cmake/README.rst CHANGES
 
 %files -n python3-tbb
+%doc python/index.html
 %{python3_sitearch}/TBB*
 %{python3_sitearch}/tbb/
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
-* Wed Jan 19 2022 wulei <wulei80@huawei.com> - 2021.4.0-1
-- Package update
-
 * Fri Jul 2 2021 Hugel <genqihu1@huawei.com> - 2020.3-4
 - Add multiple threads to make test
 
