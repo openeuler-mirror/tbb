@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.3
-Release:        4
+Release:        5
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -79,6 +79,12 @@ popd
 make doxygen
 
 %check
+#This test assumes it can create thread barriers for arbitrary numbers of
+#threads, but tbb limits the number of threads spawned to a function of the
+#number of CPUs available.  Some of the koji builders have a small number of
+#CPUs, so the test hangs waiting for threads that have not been created to
+#arrive at the barrier.  Skip this test until upstream fixes it.
+sed -i '/test_task_scheduler_observer/d' build/Makefile.test
 make test %{?_smp_mflags} tbb_build_prefix=obj stdver=c++14 CXXFLAGS="$RPM_OPT_FLAGS"
 
 %install
@@ -147,6 +153,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Fri Jul 15 2022 chenchen <chen_aka_jan@163.com> - 2020.3-5
+- disable buggy test_task_schedulerl_observer.
+
 * Fri Jul 2 2021 Hugel <genqihu1@huawei.com> - 2020.3-4
 - Add multiple threads to make test
 
