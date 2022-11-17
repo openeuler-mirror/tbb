@@ -1,6 +1,8 @@
+%global vendor %{?_vendor:%{_vendor}}%{!?_vendor:openEuler}
+
 Name:           tbb
 Version:        2020.3
-Release:        4
+Release:        5
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -46,7 +48,7 @@ TBB module of Python 3
 %prep
 %autosetup -n oneTBB-%{version} -p1
 
-sed -i 's/"`hostname -s`" ("`uname -m`"/openEulerbuild (%{_arch}/' \
+sed -i 's/"`hostname -s`" ("`uname -m`"/%{vendor}build (%{_arch}/' \
     build/version_info_linux.sh
 sed -i 's/-mrtm//' build/linux.gcc.inc
 sed -i 's,env python,python3,' python/TBB.py python/tbb/__*.py
@@ -147,6 +149,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Thu Nov 17 2022 liyanan <liyanan32@h-partners.com> - 2020.3-5
+- Replace openEuler with vendor
+
 * Fri Jul 2 2021 Hugel <genqihu1@huawei.com> - 2020.3-4
 - Add multiple threads to make test
 
