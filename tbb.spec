@@ -1,6 +1,6 @@
 Name:           tbb
 Version:        2020.3
-Release:        5
+Release:        6
 Summary:        Threading Building Blocks lets you easily write parallel C++ programs
 License:        ASL 2.0
 URL:            http://threadingbuildingblocks.org/
@@ -53,6 +53,9 @@ sed -i 's,env python,python3,' python/TBB.py python/tbb/__*.py
 sed -i '/^#!/d' python/tbb/{pool,test}.py
 
 %build
+%if "%toolchain" == "clang"
+	sed -i 's/-flifetime-dse=1//g' %{_builddir}/oneTBB-%{version}/build/*.gcc.inc
+%endif
 %make_build tbb_build_prefix=obj stdver=c++14 \
 	CXXFLAGS="%{optflags} -DDO_ITT_NOTIFY -DUSE_PTHREAD -fstack-protector-strong" \
 	LDFLAGS="$RPM_LD_FLAGS -lpthread -fstack-protector-strong"
@@ -153,6 +156,9 @@ rm %{buildroot}%{_libdir}/cmake/tbb/README.rst
 %{python3_sitearch}/__pycache__/TBB*
 
 %changelog
+* Thu May 18 2023 yoo <sunyuechi@iscas.ac.cn> - 2020.3-6
+- fix clang build error
+
 * Fri Jul 15 2022 chenchen <chen_aka_jan@163.com> - 2020.3-5
 - disable buggy test_task_schedulerl_observer.
 
